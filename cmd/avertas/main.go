@@ -13,7 +13,7 @@ import (
 	conf "github.com/AxonC/avertas/pkg/configuration"
 )
 
-func GetKeysFromMap(m map[string]interface{}) []string {
+func GetKeysFromMap(m map[string][]string) []string {
 	keys := make([]string, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
@@ -28,7 +28,8 @@ func RegisterDirectoryHandler(c *cli.Context) error {
 	}
 	configuration, err := conf.ReadConfiguration()
 	if err != nil {
-		return nil
+		conf.CreateConfiguration()
+		fmt.Println("Created new configuration.")
 	}
 	var folderName string
 	path := strings.Split(currentPath, "/")
@@ -40,6 +41,8 @@ func RegisterDirectoryHandler(c *cli.Context) error {
 		fmt.Println(err)
 		return nil
 	}
+
+	// save the configuration with the new directory
 	newConfig.PersistConfiguration()
 	fmt.Println("Successfully added folder.")
 
@@ -63,8 +66,8 @@ func ListProjects(c *cli.Context) error {
 
 		var folders []string
 		for _, f := range files {
-			// filter out system directories e.g. .DS_Store etc.
-			if f.Name()[0] != '.' {
+			// filter out system directories e.g. .DS_Store etc and only push directories
+			if f.Name()[0] != '.' && f.IsDir() {
 				folders = append(folders, f.Name())
 			}
 		}
@@ -97,6 +100,12 @@ func ListProjects(c *cli.Context) error {
 	return nil
 }
 
+// Show the location of the configuration file to the user.
+func ShowConfigPathHandler(c *cli.Context) error {
+	fmt.Println(conf.DefaultConfigPath())
+	return nil
+}
+
 func main() {
 	app := &cli.App{
 		Name:  "avertas",
@@ -115,6 +124,11 @@ func main() {
 				Name:   "register",
 				Usage:  "Register current directory containing projects",
 				Action: RegisterDirectoryHandler,
+			},
+			{
+				Name:   "config",
+				Usage:  "Show path of config",
+				Action: ShowConfigPathHandler,
 			},
 		},
 	}

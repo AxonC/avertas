@@ -56,6 +56,14 @@ func CreateConfiguration() Configuration {
 	return emptyConfig
 }
 
+func ConfigurationExists() bool {
+	fileInfo, err := os.Stat(DefaultConfigPath())
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !fileInfo.IsDir()
+}
+
 func (c Configuration) JsonString() ([]byte, error) {
 	json, err := json.MarshalIndent(c, " ", "   ")
 
